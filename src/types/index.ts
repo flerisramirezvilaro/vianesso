@@ -1,9 +1,9 @@
 
 import { Socket } from 'socket.io';
 export enum UserRole{
-    ADMIN = 'ADMIN',
-    TECHNICIAN = 'TECHNICIAN',
-    CLIENT = 'CLIENT'
+    ADMIN = 'admin',
+    TECHNICIAN = 'technician',
+    CLIENT = 'client'
 } 
 
 export enum TicketStatus {

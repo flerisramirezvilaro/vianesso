@@ -110,3 +110,26 @@ export const getServiceRequestDetail = async (
         next(error);
     }
 };
+
+/**
+ * Recupera las métricas para el dashboard del cliente
+ */
+export const getClientDashboardMetrics = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const authContext = req as Record<string, any>;
+        const client_id = authContext.user?.userId;
+
+        if (typeof client_id !== 'string' || client_id.trim() === '') {
+            throw new UnauthorizedError('Session integrity compromised. Valid UUID user ID required.');
+        }
+
+        const metrics = await serviceRequestRepository.getClientMetrics(client_id);
+
+        res.status(200).json({
+            success: true,
+            data: metrics
+        });
+    } catch (error) {
+        next(error);
+    }
+};

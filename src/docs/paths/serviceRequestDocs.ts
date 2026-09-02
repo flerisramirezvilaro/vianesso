@@ -1,6 +1,28 @@
 import { commonErrors, successResponse } from '../utils/swaggerHelpers.js';
 
 export const serviceRequestPaths = {
+    '/api/service-requests/dashboard-metrics': {
+        get: {
+            summary: 'Obtener métricas para el dashboard del cliente',
+            description: 'Recupera el conteo de servicios activos, tareas completadas y revisiones pendientes del cliente autenticado.',
+            tags: ['Service Requests'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+                200: successResponse('Métricas del dashboard recuperadas exitosamente.', {
+                    data: {
+                        type: 'object',
+                        properties: {
+                            active_services: { type: 'integer', example: 2 },
+                            completed_tasks: { type: 'integer', example: 14 },
+                            pending_reviews: { type: 'integer', example: 1 }
+                        }
+                    }
+                }),
+                401: commonErrors.unauthorized,
+                500: commonErrors.internalServerError
+            }
+        }
+    },
     '/api/service-requests': {
         post: {
             summary: 'Crear una nueva solicitud de servicio',

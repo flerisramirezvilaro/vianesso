@@ -44,3 +44,9 @@ export interface AssignedRequestResult {
     status: string;
     technician_id: string;
 }
+
+export interface ClientMetricsDTO {
+    active_services: number;
+    completed_tasks: number;
+    pending_reviews: number;
+}

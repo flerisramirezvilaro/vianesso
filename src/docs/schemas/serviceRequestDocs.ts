@@ -12,5 +12,14 @@ export const serviceRequestSchemas = {
             status: { type: 'string', example: 'PENDING' },
             created_at: { type: 'string', format: 'date-time', example: '2026-06-29T04:04:59.715Z' }
         }
+    },
+    ClientMetrics: {
+        type: 'object',
+        description: 'Métricas agregadas para el dashboard general del cliente.',
+        properties: {
+            active_services: { type: 'integer', example: 2 },
+            completed_tasks: { type: 'integer', example: 14 },
+            pending_reviews: { type: 'integer', example: 1 }
+        }
     }
 };

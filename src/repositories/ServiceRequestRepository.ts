@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { AssignedRequestResult, CreateServiceRequestInput, ServiceRequestDetailDTO, ServiceRequestDTO } from '../types/service.request.repository';
+import { AssignedRequestResult, ClientMetricsDTO, CreateServiceRequestInput, ServiceRequestDetailDTO, ServiceRequestDTO } from '../types/service.request.repository';
 import { IServiceRequestRepository } from './IServiceRequestRepository';
 import { SERVICE_REQUEST_QUERIES } from './queries/serviceRequestQueries';
 
@@ -136,5 +136,22 @@ export class ServiceRequestRepository implements IServiceRequestRepository {
     }
 }
  
+public async getClientMetrics(client_id: string): Promise<ClientMetricsDTO> {
+    try {
+        const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.GET_CLIENT_METRICS, [client_id]);
+        
+        if (!rows || rows.length === 0) {
+            return {
+                active_services: 0,
+                completed_tasks: 0,
+                pending_reviews: 0
+            };
+        }
+
+        return rows[0];
+    } catch (error) {
+        throw new Error(`[Database Core Failure] Failed to fetch metrics for client_id ${client_id}: ${(error as Error).message}`);
+    }
+}
 
 }

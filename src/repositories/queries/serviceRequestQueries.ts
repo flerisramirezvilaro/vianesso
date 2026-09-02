@@ -40,7 +40,6 @@ export const SERVICE_REQUEST_QUERIES = {
         sr.created_at AS reported_at, 
         sr.address,
         sr.description,
-        -- Subconsulta limpia: transforma las filas de la tabla relacional en un array nativo de texto
         COALESCE(
             (
                 SELECT array_agg(url) 
@@ -58,11 +57,19 @@ export const SERVICE_REQUEST_QUERIES = {
         WHERE sr.request_id = $1::uuid;
     `,
     ACCEPT_REQUEST: `
-    UPDATE public.service_requests
-    SET 
-        technician_id = $1::uuid,
-        status = 'IN_PROGRESS' 
-    WHERE request_id = $2::uuid AND status = 'PENDING'
-    RETURNING request_id, status, technician_id;
-`
+        UPDATE public.service_requests
+        SET 
+            technician_id = $1::uuid,
+            status = 'dispatched' 
+        WHERE request_id = $2::uuid AND status = 'pending_review'
+        RETURNING request_id, status, technician_id;
+    `,
+    GET_CLIENT_METRICS: `
+        SELECT 
+            COUNT(*) FILTER (WHERE status IN ('dispatched', 'en_route', 'on_site')) AS active_services,
+            COUNT(*) FILTER (WHERE status = 'closed') AS completed_tasks,
+            COUNT(*) FILTER (WHERE status = 'pending_review') AS pending_reviews
+        FROM public.service_requests
+        WHERE client_id = $1::uuid;
+    `
 };

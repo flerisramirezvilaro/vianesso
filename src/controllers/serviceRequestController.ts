@@ -130,6 +130,10 @@ export const getClientDashboardMetrics = async (req: Request, res: Response, nex
             data: metrics
         });
     } catch (error) {
-        next(error);
+     console.error("Error crítico en getClientMetrics:", error); 
+        res.status(500).json({
+            success: false,
+           message: "Error interno"
+        });
     }
 };

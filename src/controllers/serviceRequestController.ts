@@ -118,19 +118,19 @@ export const getClientDashboardMetrics = async (req: Request, res: Response, nex
     try {
         const authContext = req as Record<string, any>;
         const client_id = authContext.user?.userId;
-
+       
         if (typeof client_id !== 'string' || client_id.trim() === '') {
             throw new UnauthorizedError('Session integrity compromised. Valid UUID user ID required.');
         }
 
         const metrics = await serviceRequestRepository.getClientMetrics(client_id);
-
+       
         res.status(200).json({
             success: true,
             data: metrics
         });
     } catch (error) {
-     console.error("Error crítico en getClientMetrics:", error); 
+     
         res.status(500).json({
             success: false,
            message: "Error interno"

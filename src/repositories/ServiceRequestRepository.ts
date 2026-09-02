@@ -148,7 +148,13 @@ public async getClientMetrics(client_id: string): Promise<ClientMetricsDTO> {
             };
         }
 
-        return rows[0];
+        const result = rows[0];
+
+        return {
+            active_services: Number(result.active_services) || 0,
+            completed_tasks: Number(result.completed_tasks) || 0,
+            pending_reviews: Number(result.pending_reviews) || 0
+        };
     } catch (error) {
         throw new Error(`[Database Core Failure] Failed to fetch metrics for client_id ${client_id}: ${(error as Error).message}`);
     }

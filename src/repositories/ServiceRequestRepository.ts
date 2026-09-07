@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { AssignedRequestResult, ClientMetricsDTO, CreateServiceRequestInput, ServiceRequestDetailDTO, ServiceRequestDTO } from '../types/service.request.repository';
+import { AssignedRequestResult, ClientMetricsDTO, ClientRequestListItemDTO, CreateServiceRequestInput, ServiceRequestDetailDTO, ServiceRequestDTO } from '../types/service.request.repository';
 import { IServiceRequestRepository } from './IServiceRequestRepository';
 import { SERVICE_REQUEST_QUERIES } from './queries/serviceRequestQueries';
 
@@ -71,22 +71,31 @@ export class ServiceRequestRepository implements IServiceRequestRepository {
     /**
      *  Recupera el historial de un cliente específico en reversa cronológica
      */
-    public async findByClientId(client_id: string): Promise<ServiceRequestDTO[]> {
-        try {
-            const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.FIND_BY_CLIENT_ID, [client_id]);
-            return (rows ?? []) as ServiceRequestDTO[];
-        } catch (error) {
-            throw new Error(`[Database Core Failure] Execution failed for client_id ${client_id}: ${(error as Error).message}`);
+    public async findByClientId(client_id: string): Promise<ClientRequestListItemDTO[]> {
+    try {
+        const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.FIND_BY_CLIENT_ID, [client_id]);
+        
+        if (!rows || rows.length === 0) {
+            return [];
         }
+
+        return rows.map(row => ({
+            id: `#VN-${row.request_id.slice(0, 4)}`,
+            uuid: row.request_id,
+            title: row.title,
+            category: row.category,
+            description: row.description,
+            address: row.address,
+            status: row.status,
+            created_at: row.created_at,
+            technician_name: row.technician_name || "Sin asignar"
+     }));
+    } catch (error) {
+        throw new Error(`[Database Core Failure] Execution failed for client_id ${client_id}: ${(error as Error).message}`);
     }
+}
     /**
-     *  Recupera el detalle completo de una solicitud (Vista de Figma)
-     */
-   /**
-     *  Recupera el detalle completo de una solicitud junto a su técnico asignado (Figma View)
-     */
-   /**
-     *  Recupera el detalle completo de una solicitud junto a su técnico asignado (Figma View)
+ 
      */
     public async findDetailById(request_id: string): Promise<ServiceRequestDetailDTO | null> {
         try {

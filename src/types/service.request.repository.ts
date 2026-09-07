@@ -20,6 +20,17 @@ export interface ServiceRequestDTO {
     evidence_urls?:string[];
 }
 
+export interface ClientRequestListItemDTO {
+    id: string;               
+    uuid: string;             
+    title: string;
+    category: string;
+    description: string;
+    address: string | null;
+    status: string;
+    created_at: Date;
+    technician_name: string;
+}
 export interface AssignedTechnicianDTO {
     id: string;
     name: string;

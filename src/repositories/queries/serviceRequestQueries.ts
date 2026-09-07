@@ -19,19 +19,21 @@ export const SERVICE_REQUEST_QUERIES = {
         RETURNING evidence_id, url;
     `,
     FIND_BY_CLIENT_ID: `
-        SELECT 
-            request_id, 
-            client_id, 
-            title, 
-            category, 
-            description, 
-            address, 
-            status, 
-            created_at
-        FROM public.service_requests
-        WHERE client_id = $1::uuid
-        ORDER BY created_at DESC;
-    `,
+    SELECT 
+        sr.request_id, 
+        sr.client_id, 
+        sr.title, 
+        sr.category, 
+        sr.description, 
+        sr.address, 
+        sr.status, 
+        sr.created_at,
+        u.full_name AS technician_name
+    FROM public.service_requests sr
+    LEFT JOIN public.users u ON sr.technician_id = u.user_id
+    WHERE sr.client_id = $1::uuid
+    ORDER BY sr.created_at DESC;
+`,
     FIND_DETAIL_BY_ID: `
        SELECT 
         sr.request_id,

@@ -23,5 +23,14 @@ export const serviceRequestSchemas = {
             completed_tasks: { type: 'integer', example: 14 },
             pending_reviews: { type: 'integer', example: 1 }
         }
+    },
+    RequestMetrics: {
+        type: 'object',
+        description: 'Métricas específicas de las solicitudes del cliente.',
+        properties: {
+            pending_review: { type: 'integer', example: 1 },
+            active: { type: 'integer', example: 2 },
+            history: { type: 'integer', example: 15 }
+        }
     }
 };

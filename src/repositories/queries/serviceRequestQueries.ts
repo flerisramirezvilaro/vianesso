@@ -73,5 +73,13 @@ export const SERVICE_REQUEST_QUERIES = {
             COUNT(*) FILTER (WHERE status = 'pending_review') AS pending_reviews
         FROM public.service_requests
         WHERE client_id = $1::uuid;
-    `
+    `,
+   REQUEST_METRICS: `
+    SELECT 
+        COUNT(*) FILTER (WHERE status = 'pending_review') AS pending_review_count,
+        COUNT(*) FILTER (WHERE status IN ('dispatched', 'en_route', 'on_site')) AS active_count,
+        COUNT(*) AS history_count
+    FROM public.service_requests
+    WHERE client_id = $1::uuid;
+`
 };

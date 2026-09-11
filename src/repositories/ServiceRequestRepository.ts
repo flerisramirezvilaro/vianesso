@@ -54,7 +54,10 @@ export class ServiceRequestRepository implements IServiceRequestRepository {
 
         // Retornamos el DTO de la solicitud inyectándole las evidencias guardadas para el response final
         return {
-            ...newRequest,
+             ...newRequest,
+            id: `#VN-${newRequest.request_id.slice(0, 4)}`,
+            technician_name: "Sin asignar",
+           
             evidence_urls: savedEvidences
         };
 
@@ -167,6 +170,18 @@ public async getClientMetrics(client_id: string): Promise<ClientMetricsDTO> {
     } catch (error) {
         throw new Error(`[Database Core Failure] Failed to fetch metrics for client_id ${client_id}: ${(error as Error).message}`);
     }
+}
+
+public async getRequestMetrics(client_id: string) {
+    const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.REQUEST_METRICS, [client_id]);
+    
+    const result = rows[0] || { pending_review_count: 0, active_count: 0, history_count: 0 };
+
+    return {
+        pending_review: Number(result.pending_review_count),
+        active: Number(result.active_count),
+        history: Number(result.history_count)
+    };
 }
 
 }

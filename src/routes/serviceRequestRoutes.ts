@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createRequest, getClientDashboardMetrics, getClientRequests, getServiceRequestDetail } from '../controllers/serviceRequestController.js';
+import { createRequest, getClientDashboardMetrics, getClientRequests, getRequestMetrics, getServiceRequestDetail } from '../controllers/serviceRequestController.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
 import { uploadImage } from '../middlewares/uploadMiddleware.js';
 
@@ -11,6 +11,6 @@ router.post('/', verifyToken, uploadImage.array('evidence', 5), createRequest);
 router.get('/my-requests', verifyToken, getClientRequests);
 router.get('/dashboard-metrics', verifyToken, getClientDashboardMetrics);
 router.get('/:id', verifyToken, getServiceRequestDetail);
-
+router.get('/metrics', verifyToken, getRequestMetrics);
 
 export default router;

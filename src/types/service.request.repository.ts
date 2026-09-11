@@ -9,6 +9,7 @@ export interface CreateServiceRequestInput {
 }
 
 export interface ServiceRequestDTO {
+    id:string
     request_id: string;
     client_id: string;
     title: string;
@@ -18,6 +19,7 @@ export interface ServiceRequestDTO {
     status: string;
     created_at: Date;
     evidence_urls?:string[];
+    technician_name:string
 }
 
 export interface ClientRequestListItemDTO {

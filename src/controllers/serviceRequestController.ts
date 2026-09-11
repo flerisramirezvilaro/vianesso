@@ -4,6 +4,7 @@ import { ServiceRequestValidator } from '../utils/serviceRequestsValidators.js';
 import { NotFoundError, UnauthorizedError } from '../errors/AppError.js';
 import { ServiceRequestRepository } from '../repositories/ServiceRequestRepository.js';
 import pool from '../config/db.js';
+import { isValidUUID } from '../utils/validators.js';
 
 const serviceRequestRepository = new ServiceRequestRepository(pool);
 
@@ -134,6 +135,47 @@ export const getClientDashboardMetrics = async (req: Request, res: Response, nex
         res.status(500).json({
             success: false,
            message: "Error interno"
+        });
+    }
+};
+
+
+
+
+
+export const getRequestMetrics = async (req: Request, res: Response) => {
+    try {
+
+        const authReq = req as Request & { user?: { id: string; role: string } };
+        const client_id = authReq.user?.id;
+        const user_role = authReq.user?.role;
+
+        if (!client_id) {
+            return res.status(401).json({ success: false, error: 'Unauthorized access context.' });
+        }
+
+        if (user_role !== 'client') {
+            return res.status(403).json({ success: false, error: 'Forbidden: Insufficient permissions for client metrics.' });
+        }
+
+  
+        if (typeof client_id !== 'string' || !isValidUUID(client_id)) {
+            return res.status(400).json({ success: false, error: 'Invalid client identifier format.' });
+        }
+
+        const metrics = await serviceRequestRepository.getRequestMetrics(client_id);
+        
+        return res.status(200).json({
+            success: true,
+            data: metrics
+        });
+
+    } catch (error) {
+        console.error('[Metrics Error Internal]:', (error as Error).message);
+        
+        return res.status(500).json({ 
+            success: false, 
+            error: 'An internal server error occurred while retrieving metrics.' 
         });
     }
 };

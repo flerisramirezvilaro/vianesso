@@ -131,5 +131,28 @@ export const serviceRequestPaths = {
                 500: commonErrors.internalServerError 
             }
         }
-    }
+    },
+    '/api/service-requests/metrics': {
+        get: {
+            summary: 'Obtener métricas específicas de las solicitudes',
+            description: 'Recupera el conteo detallado de solicitudes pendientes de revisión, activas e historial del cliente.',
+            tags: ['Service Requests'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+                200: successResponse('Métricas de solicitudes recuperadas exitosamente.', {
+                    data: {
+                        type: 'object',
+                        properties: {
+                            pending_review: { type: 'integer', example: 1 },
+                            active: { type: 'integer', example: 2 },
+                            history: { type: 'integer', example: 15 }
+                        }
+                    }
+                }),
+                401: commonErrors.unauthorized,
+                403: commonErrors.forbidden,
+                500: commonErrors.internalServerError
+            }
+        }
+    },
 };

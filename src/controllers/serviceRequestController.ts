@@ -146,9 +146,10 @@ export const getClientDashboardMetrics = async (req: Request, res: Response, nex
 export const getRequestMetrics = async (req: Request, res: Response) => {
     try {
 
-        const authReq = req as Request & { user?: { id: string; role: string } };
-        const client_id = authReq.user?.id;
+        const authReq = req as Request & { user?: { userId: string; role: string } };
+        const client_id = authReq.user?.userId;
         const user_role = authReq.user?.role;
+    
 
         if (!client_id) {
             return res.status(401).json({ success: false, error: 'Unauthorized access context.' });

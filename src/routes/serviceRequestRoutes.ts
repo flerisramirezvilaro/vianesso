@@ -10,7 +10,8 @@ const router = Router();
 router.post('/', verifyToken, uploadImage.array('evidence', 5), createRequest);
 router.get('/my-requests', verifyToken, getClientRequests);
 router.get('/dashboard-metrics', verifyToken, getClientDashboardMetrics);
-router.get('/:id', verifyToken, getServiceRequestDetail);
 router.get('/metrics', verifyToken, getRequestMetrics);
+router.get('/:id', verifyToken, getServiceRequestDetail);
+
 
 export default router;

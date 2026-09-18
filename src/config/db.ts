@@ -1,38 +1,34 @@
-import pg from "pg";
-import dotenv from 'dotenv'
+import pg, { QueryResult, QueryResultRow } from 'pg'
+import { ENV } from './env'
 
+const { Pool } = pg
 
-// Asegurar que carguen las variables de entorno del archivo .env
-dotenv.config();
-
-const {Pool} =pg
-// Configuración del Pool de conexiones usando las variables de entorno
-
-const pool= new Pool({
-    connectionString: process.env.DATABASE_URL,
-    user:process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT) || 5432,
-    database: process.env.DB_NAME,
-    ssl: {
-        rejectUnauthorized: false
-    }
+const pool = new Pool({
+  connectionString: ENV.DATABASE_URL,
+  ssl:
+    ENV.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }
+      : false,
 })
 
-// Escuchar eventos del Pool para monitorear errores o conexiones exitosas
 pool.on('connect', () => {
-    console.log(' PostgreSQL Pool connected successfully');
-});
+  console.log('PostgreSQL Pool connected successfully')
+})
 
-pool.on('error', (err) => {
-    console.error(' Unexpected error on idle PostgreSQL client', err);
-    process.exit(-1);
-});
+pool.on('error', (error: Error) => {
+  console.error('Unexpected PostgreSQL error', error)
+  process.exit(1)
+})
 
-// Función helper para realizar consultas (queries) en cualquier parte del backend
-export const query = (text: string, params?: any[]) => {
-    return pool.query(text, params);
-};
 
-export default pool;
+
+export const query = async <
+  T extends QueryResultRow,
+>(
+  text: string,
+  params: unknown[] = [],
+): Promise<QueryResult<T>> => {
+  return pool.query<T>(text, params)
+}
+
+export default pool

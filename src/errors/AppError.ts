@@ -23,3 +23,6 @@ export class NotFoundError extends AppError {
 export class ConflictError extends AppError {
     readonly statusCode = 409;
 }
+export class InternalServerError extends AppError {
+  readonly statusCode = 500
+}

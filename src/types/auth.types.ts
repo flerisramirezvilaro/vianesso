@@ -23,3 +23,11 @@ export interface UserData {
     role: UserRole;
     created_at?: Date;
 }
+
+export interface CreateUserInput {
+  full_name: string
+  email: string
+  passwordHash: string
+  phone: string | null
+  role: string
+}

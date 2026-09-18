@@ -1,17 +1,23 @@
-// src/config/env.ts
-import dotenv from 'dotenv';
-dotenv.config();
+import dotenv from 'dotenv'
 
-if (!process.env.JWT_SECRET) {
-    throw new Error(' CRITICAL CONFIGURATION ERROR: JWT_SECRET environment variable is missing.');
+dotenv.config()
+
+const getEnvVariable = (name: string): string => {
+  const value = process.env[name]
+
+  if (!value) {
+    throw new Error(
+      `CRITICAL CONFIGURATION ERROR: ${name} environment variable is missing.`,
+    )
+  }
+
+  return value
 }
 
-if (!process.env.JWT_EXPIRES_IN) {
-    throw new Error(' CRITICAL CONFIGURATION ERROR: JWT_EXPIRES_IN environment variable is missing.');
-}
-
-// Exportamos un objeto de configuración inmutable y tipado de forma estricta
 export const ENV = {
-    JWT_SECRET: process.env.JWT_SECRET,
-    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN
-} as const;
+  NODE_ENV: process.env.NODE_ENV ?? 'development',
+  DATABASE_URL: getEnvVariable('DATABASE_URL'),
+  JWT_SECRET: getEnvVariable('JWT_SECRET'),
+  API_URL: getEnvVariable('API_URL'),
+  JWT_EXPIRES_IN: getEnvVariable('JWT_EXPIRES_IN'),
+} as const

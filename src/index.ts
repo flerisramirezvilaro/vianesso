@@ -1,62 +1,98 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { query } from './config/db.js';
-import authRoutes from './routes/authRoutes.js'; 
-import ticketRoutes from './routes/ticketRoutes.js';
-import usersRoutes from './routes/userRoutes.js';
-import swaggerUi from 'swagger-ui-express';
-import { swaggerSpec } from './config/swagger.js';
-import serviceRequestRouter from './routes/serviceRequestRoutes.js';
-import { errorHandler } from './middlewares/errorHandler.js';
-import uploadRoutes from './routes/uploadRoutes.js';
-import technicianRoutes from "./routes/technicianRoutes.js";
-import { createServer } from 'node:http';
-import { initializeSocket } from './services/socketService.js';
-
+import dotenv from "dotenv";
 dotenv.config();
+
+import cors from "cors";
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+import { createServer } from "node:http";
+
+import { query } from "./config/db.js";
+import { swaggerSpec } from "./config/swagger.js";
+
+import authRoutes from "./routes/authRoutes.js";
+import ticketRoutes from "./routes/ticketRoutes.js";
+import usersRoutes from "./routes/userRoutes.js";
+import serviceRequestRoutes from "./routes/serviceRequestRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
+import technicianRoutes from "./routes/technicianRoutes.js";
+
+import { errorHandler } from "./middlewares/errorHandler.js";
+import { initializeSocket } from "./services/socketService.js";
 
 const app = express();
 
-// ─── CAMBIO: Configuración explícita de CORS para mayor seguridad ───
+const PORT = Number(process.env.PORT) || 5000;
+
 const corsOptions = {
-    origin: process.env.CLIENT_URL || 'http://localhost:5000',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    credentials: true,
+  origin: process.env.CLIENT_URL ?? "http://localhost:3000",
+
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/tickets', ticketRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/service-requests', serviceRequestRouter);
+// Static files
+app.use(express.static("public"));
 
-// Upload images
-app.use('/api/uploads', uploadRoutes);
-// Technician
-app.use('/api/technician', technicianRoutes);
+// Swagger
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: "ViaNesso API Documentation",
 
+    customfavIcon: "/uploads/logo.svg",
+
+    customCss: `
+      .swagger-ui .topbar {
+        display: none;
+      }
+    `,
+  }),
+);
+
+// Authentication
+app.use("/api/auth", authRoutes);
+
+// Users
+app.use("/api/users", usersRoutes);
+
+// Tickets
+app.use("/api/tickets", ticketRoutes);
+
+// Service Requests
+app.use("/api/service-requests", serviceRequestRoutes);
+
+// Uploads
+app.use("/api/uploads", uploadRoutes);
+
+// Technicians
+app.use("/api/technician", technicianRoutes);
+
+// Global Error Handler
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-// Envolvemos la app de Express en un servidor HTTP nativo
 const httpServer = createServer(app);
 
-// Inicializamos Socket.io pasándole el servidor HTTP
 initializeSocket(httpServer);
 
-httpServer.listen(PORT, async () => {
-    console.log(`Server running smoothly on port ---${PORT}`);
-    
-    try {
-        const result = await query('SELECT NOW()');
-        console.log('DB Connection verified! Current DB Time:', result.rows[0].now);
-    } catch (error) {
-        console.error('DB Connection failed. Check your .env credentials:', error);
-    }
+const verifyDatabaseConnection = async (): Promise<void> => {
+  try {
+    const result = await query("SELECT NOW()");
+
+    console.log("✅ Database connected:", result.rows[0].now);
+  } catch (error) {
+    console.error("❌ Database connection failed:", error);
+  }
+};
+
+httpServer.listen(PORT, async (): Promise<void> => {
+  console.log(`🚀 Server running on port ${PORT}`);
+
+  await verifyDatabaseConnection();
 });
 
 export default app;

@@ -1,47 +1,57 @@
-import { Request, Response, NextFunction } from 'express';
-import { ServiceRequestRepository } from '../repositories/ServiceRequestRepository.js';
-import { UnauthorizedError, NotFoundError, ConflictError } from '../errors/AppError.js';
-import pool from '../config/db.js';
+import { NextFunction, Request, Response } from "express";
 
-const serviceRequestRepository = new ServiceRequestRepository(pool);
+import { UnauthorizedError } from "../errors/AppError.js";
+import { ServiceRequestService } from "../services/ServiceRequestService.js";
+import { ServiceRequestRepository } from "../repositories/ServiceRequestRepository.js";
+import pool from "../config/db.js";
 
-/**
- * Permite a un técnico asignarse una solicitud pendiente
- */
-export const acceptServiceRequest = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        const authContext = req as Record<string, any>;
-       
-        // ─── CAMBIO: Obtenemos el ID del técnico directamente como string (UUID) ───
-        const technicianId = authContext.user?.userId;
+const serviceRequestService = new ServiceRequestService(
+  new ServiceRequestRepository(pool),
+);
 
-        // Validamos la sesión e integridad del rol del técnico asegurando que sea un UUID string válido
-        if (!technicianId || typeof technicianId !== 'string' || technicianId.trim() === '') {
-            throw new UnauthorizedError('Session integrity compromised. Valid UUID technician ID required.');
-        }
+const ensureUserId = (
+  req: Request & {
+    user?: {
+      userId?: string;
+    };
+  },
+): string => {
+  const userId = req.user?.userId;
 
-        // Forzamos la obtención y tipado estricto de string para el ID de la solicitud
-        const requestId = req.params.id;
+  if (!userId || typeof userId !== "string") {
+    throw new UnauthorizedError(
+      "Session integrity compromised. Valid UUID technician ID required.",
+    );
+  }
 
-        if (!requestId || typeof requestId !== 'string') {
-            throw new NotFoundError('Request ID is required to accept a service.');
-        }
+  return userId;
+};
 
-        // Intentamos realizar la asignación en la base de datos usando el UUID del técnico
-        const updatedRequest = await serviceRequestRepository.assignTechnician(requestId, technicianId);
+export const acceptServiceRequest = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const authReq = req as Request & {
+      user?: {
+        userId?: string;
+      };
+    };
 
-        if (!updatedRequest) {
-            throw new ConflictError(
-                'Could not accept the request. It might be already assigned, completed, or does not exist.'
-            );
-        }
+    const technicianId = ensureUserId(authReq);
 
-        res.status(200).json({
-            success: true,
-            message: 'Service request successfully accepted and assigned.',
-            data: updatedRequest
-        });
-    } catch (error) {
-        next(error);
-    }
+    const requestId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+    const response = await serviceRequestService.acceptRequest(
+      requestId,
+      technicianId,
+    );
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
 };

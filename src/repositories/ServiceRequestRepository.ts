@@ -1,187 +1,159 @@
-import { Pool } from 'pg';
-import { AssignedRequestResult, ClientMetricsDTO, ClientRequestListItemDTO, CreateServiceRequestInput, ServiceRequestDetailDTO, ServiceRequestDTO } from '../types/service.request.repository';
-import { IServiceRequestRepository } from './IServiceRequestRepository';
-import { SERVICE_REQUEST_QUERIES } from './queries/serviceRequestQueries';
+import { Pool, PoolClient } from "pg";
 
+import {
+  AssignedRequestResult,
+  ClientMetricsDTO,
+  ClientRequestListItemDTO,
+  CreateServiceRequestInput,
+  ServiceRequestDetailDTO,
+  ServiceRequestDTO,
+} from "../types/service.request.repository";
+
+import { IServiceRequestRepository } from "./IServiceRequestRepository";
+import { SERVICE_REQUEST_QUERIES } from "./queries/serviceRequestQueries";
 
 export class ServiceRequestRepository implements IServiceRequestRepository {
-    constructor(private readonly db: Pool) {}
+  constructor(private readonly db: Pool) {}
 
-    /**
-     *  Inserta una nueva solicitud en la base de datos
-     */
-   public async create(client_id: string, data: CreateServiceRequestInput): Promise<ServiceRequestDTO> {
+  public async create(
+    clientId: string,
+    data: CreateServiceRequestInput,
+  ): Promise<ServiceRequestDTO> {
     const values = [
-        client_id,
-        data.title,
-        data.category,
-        data.description,
-        data.address ?? null,
-        data.longitude ?? null,
-        data.latitude ?? null
+      clientId,
+      data.title,
+      data.category,
+      data.description,
+      data.address ?? null,
+      data.longitude ?? null,
+      data.latitude ?? null,
     ];
 
-    // Obtenemos un cliente de conexión de la pool para manejar la transacción de forma aislada
     const client = await this.db.connect();
 
     try {
-        // 1. Iniciamos la transacción
-        await client.query('BEGIN');
+      await client.query("BEGIN");
 
-        // 2. Insertamos la solicitud base
-        const { rows } = await client.query(SERVICE_REQUEST_QUERIES.CREATE, values);
-        
-        if (!rows?.length) {
-            throw new Error('Database insertion succeeded but returned an empty structural payload.');
-        }
+      const { rows } = await client.query<ServiceRequestDTO>(
+        SERVICE_REQUEST_QUERIES.CREATE,
+        values,
+      );
 
-        const newRequest = rows[0] as ServiceRequestDTO;
-        const requestId = newRequest.request_id;
+      if (rows.length === 0) {
+        throw new Error("Service request creation returned no data.");
+      }
 
-        // 3. Insertamos las evidencias en la nueva tabla (si vienen en el payload y contienen datos)
-        const savedEvidences: string[] = [];
-        if (data.evidence_urls && Array.isArray(data.evidence_urls) && data.evidence_urls.length > 0) {
-            for (const url of data.evidence_urls) {
-                if (url && url.trim() !== "") {
-                    await client.query(SERVICE_REQUEST_QUERIES.ADD_EVIDENCE, [requestId, url]);
-                    savedEvidences.push(url);
-                }
-            }
-        }
+      const createdRequest = rows[0];
 
-        // 4. Consolidamos la transacción si  salió bien
-        await client.query('COMMIT');
+      await this.saveEvidences(
+        client,
+        createdRequest.request_id,
+        data.evidence_urls ?? [],
+      );
 
-        // Retornamos el DTO de la solicitud inyectándole las evidencias guardadas para el response final
-        return {
-             ...newRequest,
-            id: `#VN-${newRequest.request_id.slice(0, 4)}`,
-            technician_name: "Sin asignar",
-           
-            evidence_urls: savedEvidences
-        };
+      await client.query("COMMIT");
 
+      return createdRequest;
     } catch (error) {
-        // Si algo falla, revertimos cualquier cambio hecho en la base de datos
-        await client.query('ROLLBACK');
-        throw new Error(`[Database Transaction Failure] Insertion halted on service request context: ${(error as Error).message}`);
+      await client.query("ROLLBACK");
+      throw error;
     } finally {
-        // Siempre liberamos el cliente de vuelta a la pool
-        client.release();
+      client.release();
     }
-}
+  }
 
-    /**
-     *  Recupera el historial de un cliente específico en reversa cronológica
-     */
-    public async findByClientId(client_id: string): Promise<ClientRequestListItemDTO[]> {
-    try {
-        const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.FIND_BY_CLIENT_ID, [client_id]);
-        
-        if (!rows || rows.length === 0) {
-            return [];
-        }
+  public async findByClientId(
+    clientId: string,
+  ): Promise<ClientRequestListItemDTO[]> {
+    const { rows } = await this.db.query<ClientRequestListItemDTO>(
+      SERVICE_REQUEST_QUERIES.FIND_BY_CLIENT_ID,
+      [clientId],
+    );
 
-        return rows.map(row => ({
-            id: `#VN-${row.request_id.slice(0, 4)}`,
-            uuid: row.request_id,
-            title: row.title,
-            category: row.category,
-            description: row.description,
-            address: row.address,
-            status: row.status,
-            created_at: row.created_at,
-            technician_name: row.technician_name || "Sin asignar"
-     }));
-    } catch (error) {
-        throw new Error(`[Database Core Failure] Execution failed for client_id ${client_id}: ${(error as Error).message}`);
+    return rows;
+  }
+
+  public async findDetailById(
+    requestId: string,
+  ): Promise<ServiceRequestDetailDTO | null> {
+    const { rows } = await this.db.query<ServiceRequestDetailDTO>(
+      SERVICE_REQUEST_QUERIES.FIND_DETAIL_BY_ID,
+      [requestId],
+    );
+
+    return rows[0] ?? null;
+  }
+
+  public async assignTechnician(
+    requestId: string,
+    technicianId: string,
+  ): Promise<AssignedRequestResult | null> {
+    const { rows } = await this.db.query<AssignedRequestResult>(
+      SERVICE_REQUEST_QUERIES.ACCEPT_REQUEST,
+      [technicianId, requestId],
+    );
+
+    return rows[0] ?? null;
+  }
+
+  public async getClientMetrics(clientId: string): Promise<ClientMetricsDTO> {
+    const { rows } = await this.db.query(
+      SERVICE_REQUEST_QUERIES.GET_CLIENT_METRICS,
+      [clientId],
+    );
+
+    const result = rows[0];
+
+    if (!result) {
+      return {
+        active_services: 0,
+        completed_tasks: 0,
+        pending_reviews: 0,
+      };
     }
-}
-    /**
- 
-     */
-    public async findDetailById(request_id: string): Promise<ServiceRequestDetailDTO | null> {
-        try {
-            const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.FIND_DETAIL_BY_ID, [request_id]);
-            
-            if (!rows || rows.length === 0) {
-                return null;
-            }
-
-            const row = rows[0];
-
-            return {
-            request_id: row.request_id,
-            status: row.status,
-            category: row.category,
-            reported_at: row.created_at,
-            address: row.address,
-            description: row.description,
-            evidence_urls: row.evidence_urls || [], 
-            assigned_technician: row.technician_id ? {
-                id: row.technician_id,
-                name: row.technician_name,
-                role: row.technician_role,
-                avatar_url: row.technician_avatar || ""
-            } : null
-        };
-            
-        } catch (error) {
-            throw new Error(`[Database Core Failure] Execution failed for request_id ${request_id}: ${(error as Error).message}`);
-        }
-    }
-
-   public async assignTechnician(request_id: string, technician_id: string): Promise<AssignedRequestResult | null> {
-    try {
-        const result = await this.db.query(
-            SERVICE_REQUEST_QUERIES.ACCEPT_REQUEST, 
-            [technician_id, request_id]
-        );
-
-        if (!result.rows || result.rows.length === 0) {
-            return null;
-        }
-
-        return result.rows[0] as AssignedRequestResult;
-    } catch (error) {
-        throw new Error(`[Database Core Failure] Failed to assign technician ${technician_id} to request ${request_id}: ${(error as Error).message}`);
-    }
-}
- 
-public async getClientMetrics(client_id: string): Promise<ClientMetricsDTO> {
-    try {
-        const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.GET_CLIENT_METRICS, [client_id]);
-        
-        if (!rows || rows.length === 0) {
-            return {
-                active_services: 0,
-                completed_tasks: 0,
-                pending_reviews: 0
-            };
-        }
-
-        const result = rows[0];
-
-        return {
-            active_services: Number(result.active_services) || 0,
-            completed_tasks: Number(result.completed_tasks) || 0,
-            pending_reviews: Number(result.pending_reviews) || 0
-        };
-    } catch (error) {
-        throw new Error(`[Database Core Failure] Failed to fetch metrics for client_id ${client_id}: ${(error as Error).message}`);
-    }
-}
-
-public async getRequestMetrics(client_id: string) {
-    const { rows } = await this.db.query(SERVICE_REQUEST_QUERIES.REQUEST_METRICS, [client_id]);
-    
-    const result = rows[0] || { pending_review_count: 0, active_count: 0, history_count: 0 };
 
     return {
-        pending_review: Number(result.pending_review_count),
-        active: Number(result.active_count),
-        history: Number(result.history_count)
-    };
-}
+      active_services: Number(result.active_services) || 0,
 
+      completed_tasks: Number(result.completed_tasks) || 0,
+
+      pending_reviews: Number(result.pending_reviews) || 0,
+    };
+  }
+
+  public async getRequestMetrics(clientId: string): Promise<{
+    pending_review: number;
+    active: number;
+    history: number;
+  }> {
+    const { rows } = await this.db.query(
+      SERVICE_REQUEST_QUERIES.REQUEST_METRICS,
+      [clientId],
+    );
+
+    const result = rows[0];
+
+    return {
+      pending_review: Number(result?.pending_review_count) || 0,
+      active: Number(result?.active_count) || 0,
+      history: Number(result?.history_count) || 0,
+    };
+  }
+
+  private async saveEvidences(
+    client: PoolClient,
+    requestId: string,
+    evidenceUrls: string[],
+  ): Promise<void> {
+    for (const url of evidenceUrls) {
+      if (!url.trim()) {
+        continue;
+      }
+
+      await client.query(SERVICE_REQUEST_QUERIES.ADD_EVIDENCE, [
+        requestId,
+        url,
+      ]);
+    }
+  }
 }

@@ -2,16 +2,18 @@ import { UserRole } from ".";
 
 
 export interface UserDocument {
-    user_id: string;
-    full_name: string;
-    email: string;
-    phone: string | null;
-    role: UserRole;
-    created_at?: Date;
-    avatar_url?:string
+  user_id: string
+  full_name: string
+  email: string
+  phone: string | null
+  role: UserRole
+  created_at?: Date
+  avatar_url: string | null
 }
+
+
 export interface UserAuthDocument extends UserDocument {
-    password?: string; 
+    password: string; 
 }
 
 export interface UpdateUserProfileInput {

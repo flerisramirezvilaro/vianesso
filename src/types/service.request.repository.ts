@@ -1,65 +1,64 @@
 export interface CreateServiceRequestInput {
-    title: string;
-    category: string;
-    description: string;
-    address?: string;
-    latitude?: number;
-    longitude?: number;
-    evidence_urls?: string[];
+  title: string;
+  category: string;
+  description: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  evidence_urls?: string[];
 }
 
 export interface ServiceRequestDTO {
-    id:string
-    request_id: string;
-    client_id: string;
-    title: string;
-    category: string;
-    description: string;
-    address: string | null;
-    status: string;
-    created_at: Date;
-    evidence_urls?:string[];
-    technician_name:string
+  id: string;
+  request_id: string;
+  client_id: string;
+  title: string;
+  category: string;
+  description: string;
+  address: string | null;
+  status: string;
+  created_at: Date;
+  evidence_urls?: string[];
+  technician_name: string | null;
 }
 
 export interface ClientRequestListItemDTO {
-    id: string;               
-    uuid: string;             
-    title: string;
-    category: string;
-    description: string;
-    address: string | null;
-    status: string;
-    created_at: Date;
-    technician_name: string;
+  id: string;
+  uuid: string;
+  title: string;
+  category: string;
+  description: string;
+  address: string | null;
+  status: string;
+  created_at: Date;
+  technician_name: string;
 }
 export interface AssignedTechnicianDTO {
-    id: string;
-    name: string;
-    role: string;
-    avatar_url: string | null;
+  id: string;
+  name: string;
+  role: string;
+  avatar_url: string | null;
 }
 
 export interface ServiceRequestDetailDTO {
-    request_id: string; 
-    status: string;
-    category: string;
-    reported_at: Date;
-    address: string | null;
-    description: string;
-    assigned_technician: AssignedTechnicianDTO | null;
-    evidence_urls: string[]; 
-    
+  request_id: string;
+  status: string;
+  category: string;
+  reported_at: Date;
+  address: string | null;
+  description: string;
+  assigned_technician: AssignedTechnicianDTO | null;
+  evidence_urls: string[];
 }
 
 export interface AssignedRequestResult {
-    request_id: string;
-    status: string;
-    technician_id: string;
+  request_id: string;
+  status: string;
+  technician_id: string;
 }
 
 export interface ClientMetricsDTO {
-    active_services: number;
-    completed_tasks: number;
-    pending_reviews: number;
+  active_services: number;
+  completed_tasks: number;
+  pending_reviews: number;
 }

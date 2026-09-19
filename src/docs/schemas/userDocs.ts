@@ -26,7 +26,7 @@ export const userSchemas = {
         type: "string",
         example: "technician",
       },
-      avatarUrl: {
+      avatar_url: {
         type: "string",
         nullable: true,
         example: "https://res.cloudinary.com/.../avatar.png",

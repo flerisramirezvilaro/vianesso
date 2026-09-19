@@ -68,7 +68,7 @@ export const authPaths = {
                   example: "technician",
                 },
 
-                avatarUrl: {
+                avatar_url: {
                   type: "string",
                   nullable: true,
                   example:

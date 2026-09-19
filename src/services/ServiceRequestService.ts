@@ -1,4 +1,5 @@
 import {
+  ConflictError,
   NotFoundError,
   UnauthorizedError,
   ValidationError,
@@ -85,6 +86,24 @@ export class ServiceRequestService {
     return {
       success: true,
       data: metrics,
+    };
+  }
+  async acceptRequest(requestId: string, technicianId: string) {
+    const request = await this.repository.assignTechnician(
+      requestId,
+      technicianId,
+    );
+
+    if (!request) {
+      throw new ConflictError(
+        "Could not accept the request. It might be already assigned, completed, or does not exist.",
+      );
+    }
+
+    return {
+      success: true,
+      message: "Service request successfully accepted and assigned.",
+      data: request,
     };
   }
 }

@@ -28,9 +28,13 @@ const allowedOrigins = [
   process.env.CLIENT_URL_PROD,
 ].filter((origin): origin is string => Boolean(origin));
 
-const corsOptions = {
+/*const corsOptions = {
   origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  credentials: true,
+};*/
+const corsOptions = {
+  origin: true,
   credentials: true,
 };
 

@@ -28,23 +28,13 @@ const allowedOrigins = [
   process.env.CLIENT_URL_PROD,
 ].filter((origin): origin is string => Boolean(origin));
 
-console.log("CLIENT_URL:", process.env.CLIENT_URL);
-console.log("CLIENT_URL_PROD:", process.env.CLIENT_URL_PROD);
-console.log("ALLOWED_ORIGINS:", allowedOrigins);
-
-/*const corsOptions = {
+const corsOptions = {
   origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true,
-};*/
+};
 
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  }),
-);
-//app.options(/.*/, cors(corsOptions));
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
@@ -104,7 +94,7 @@ const verifyDatabaseConnection = async (): Promise<void> => {
 };
 
 httpServer.listen(PORT, async (): Promise<void> => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 
   await verifyDatabaseConnection();
 });

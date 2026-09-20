@@ -32,11 +32,11 @@ console.log("CLIENT_URL:", process.env.CLIENT_URL);
 console.log("CLIENT_URL_PROD:", process.env.CLIENT_URL_PROD);
 console.log("ALLOWED_ORIGINS:", allowedOrigins);
 
-const corsOptions = {
+/*const corsOptions = {
   origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true,
-};
+};*/
 
 app.use(
   cors({

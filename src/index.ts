@@ -28,17 +28,19 @@ const allowedOrigins = [
   process.env.CLIENT_URL_PROD,
 ].filter((origin): origin is string => Boolean(origin));
 
-/*const corsOptions = {
+console.log("CLIENT_URL:", process.env.CLIENT_URL);
+console.log("CLIENT_URL_PROD:", process.env.CLIENT_URL_PROD);
+console.log("ALLOWED_ORIGINS:", allowedOrigins);
+
+const corsOptions = {
   origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true,
-};*/
-const corsOptions = {
-  origin: true,
-  credentials: true,
 };
 
+app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
+
 app.use(express.json());
 
 // Static files

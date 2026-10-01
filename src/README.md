@@ -493,10 +493,17 @@ query<ChatMessageDTO>()
 
 # 🚀 Instalación
 
+## Requisitos Previos
+
+- Node.js 22+
+- PostgreSQL 15+
+- npm 10+
+
 ## 1. Clonar el repositorio
 
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/flerisramirezvilaro/vianesso.git
 ```
 
 ---
@@ -530,7 +537,7 @@ DB_USER=postgres
 DB_PASSWORD=password
 DB_NAME=vianesso
 
-CLIENT_URL=http://localhost:3000
+CLIENT_URL=http://localhost:5000
 ```
 
 ---
@@ -592,12 +599,30 @@ npm start
 
 # 🔮 Próximas Mejoras
 
+## Calidad
+
+- Implementación de pruebas unitarias
+- Implementación de pruebas de integración
+- Incremento de cobertura de pruebas
+
+## DevOps
+
+- Pipeline de Integración Continua (CI)
+- Pipeline de Despliegue Continuo (CD)
+- Automatización de validaciones en Pull Requests
+- Automatización de linting y tests
+
+## Arquitectura
+
 - Optimización de helpers compartidos
-- Auditoría final de repositories
 - Homogeneización de DTOs
+- Auditoría final de repositories
+
+## Plataforma
+
 - Mejoras de observabilidad
 - Eventos en tiempo real más avanzados
-- Cobertura de pruebas automatizadas
+
 
 ---
 

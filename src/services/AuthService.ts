@@ -1,21 +1,23 @@
 import jwt from "jsonwebtoken";
-
 import bcrypt from "bcrypt";
 import { UnauthorizedError, ValidationError } from "../errors/AppError";
-import { PostgresUserReadRepository } from "../repositories/PostgresUserReadRepository";
-import { PostgresUserWriteRepository } from "../repositories/PostgresUserWriteRepository";
 import { LoginInput, RegisterInput } from "../types/auth.types";
 import { AuthValidator } from "../utils/authValidators";
 import { ENV } from "../config/env";
-
-const userReadRepository = new PostgresUserReadRepository();
-const userWriteRepository = new PostgresUserWriteRepository();
+import {
+  IUserReadRepository,
+  IUserWriteRepository,
+} from "../repositories/IUserRepository";
 
 export class AuthService {
+  constructor(
+    private readonly userReadRepository: IUserReadRepository,
+    private readonly userWriteRepository: IUserWriteRepository,
+  ) {}
   async register(data: Partial<RegisterInput>) {
     const validatedData = AuthValidator.validateRegister(data);
 
-    const existingUser = await userReadRepository.findByEmail(
+    const existingUser = await this.userReadRepository.findByEmail(
       validatedData.email,
     );
 
@@ -27,7 +29,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(validatedData.password, salt);
 
-    const createdUser = await userWriteRepository.create({
+    const createdUser = await this.userWriteRepository.create({
       full_name: validatedData.name,
       email: validatedData.email,
       passwordHash: hashedPassword,
@@ -49,7 +51,7 @@ export class AuthService {
   async login(data: Partial<LoginInput>) {
     const validatedCredentials = AuthValidator.validateLogin(data);
 
-    const user = await userReadRepository.findByEmail(
+    const user = await this.userReadRepository.findByEmail(
       validatedCredentials.email,
     );
 
